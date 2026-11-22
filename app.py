@@ -8,7 +8,7 @@ import streamlit as st
 
 
 def convert_date(date_text):
-    return datetime.strptime(date_text.strip(), "%d.%m.%Y").strftime("%m/%d/%Y")
+    return datetime.strptime(date_text.strip(), "%d.%m.%Y").strftime("%m/%d/%y")
 
 
 def parse_amount(value):
@@ -86,37 +86,16 @@ def extract_required_rows(pdf_file):
                     except ValueError:
                         continue
 
-                    debit_prefix = get_debit_prefix(debit_value)
-
+                    # A billing document number is optional.
                     all_candidate_rows.append({
                         "Date": formatted_date,
                         "Csh Rpt No / Invoice No": invoice_no,
                         "Cheque no. / Billing Doc No.": billing_doc_no,
                         "Debit": debit_value,
-                        "_sort_date": date_obj,
-                        "_has_valid_billing": is_valid_billing_doc(billing_doc_no),
-                        "_debit_prefix": debit_prefix
+                        "_sort_date": date_obj
                     })
 
-    valid_debit_prefixes = set()
-
-    for row in all_candidate_rows:
-        if row["_has_valid_billing"]:
-            valid_debit_prefixes.add(row["_debit_prefix"])
-
-    final_rows = []
-
-    for row in all_candidate_rows:
-        if row["_has_valid_billing"] or row["_debit_prefix"] in valid_debit_prefixes:
-            final_rows.append({
-                "Date": row["Date"],
-                "Csh Rpt No / Invoice No": row["Csh Rpt No / Invoice No"],
-                "Cheque no. / Billing Doc No.": row["Cheque no. / Billing Doc No."],
-                "Debit": row["Debit"],
-                "_sort_date": row["_sort_date"]
-            })
-
-    return final_rows
+    return all_candidate_rows
 
 
 def remove_duplicate_combinations(df):
